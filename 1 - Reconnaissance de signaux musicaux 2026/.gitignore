@@ -1,0 +1,4 @@
+samples/
+*.pickle
+*.wav
+.DS_Store
