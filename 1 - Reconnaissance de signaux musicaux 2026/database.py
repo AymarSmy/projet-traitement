@@ -44,6 +44,9 @@ if __name__ == '__main__':
     for audiofile in audiofiles:
 
         fs, s = read(folder + '/' + audiofile)
+        # on s'occupe des fichiers qui sont en stéréo pour lesquels on supprime l'un des deux canaux. On les remets en mono
+        if len(s.shape) > 1:
+            s = s[:, 0]
         print('Song: ' + audiofile[:-4])
         print('Sampling frequency: ' + str(fs))
         encoder.process(fs, s)
