@@ -63,3 +63,7 @@ if __name__ == '__main__':
     # Affichage de l'histogramme pour le gagnant
     best_matcher = Matching(hashes, database[best_idx]['hashcodes'])
     best_matcher.display_histogram()
+
+    #Affichage histogramme pour une autre chanson
+    no_matcher = Matching(hashes, database[(best_idx + 1) % len(database)]['hashcodes'])
+    no_matcher.display_histogram()
