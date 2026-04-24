@@ -1,9 +1,3 @@
-"""
-Algorithm implementation
-"""
-"""
-Algorithm implementation - Complété
-"""
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -44,29 +38,55 @@ class Encoding:
 
     def process(self, fs, s):
         """
-        Calcule le spectrogramme, extrait la constellation et crée les hashs.
+
+        To Do
+        -----
+
+        This function takes as input a sampled signal s and the sampling
+        frequency fs and returns the fingerprint (the hashcodes) of the signal.
+        The fingerprint is created through the following steps
+        - spectrogram computation
+        - local maxima extraction
+        - hashes creation
+
+        Implement all these operations in this function. Keep as attributes of
+        the class the spectrogram, the range of frequencies, the anchors, the 
+        list of hashes, etc.
+
+        Each hash can conveniently be represented by a Python dictionary 
+        containing the time associated to its anchor (key: "t") and a numpy 
+        array with the difference in time between the anchor and the target, 
+        the frequency of the anchor and the frequency of the target 
+        (key: "hash")
+
+
+        Parameters
+        ----------
+
+        fs: int
+           sampling frequency [Hz]
+        s: numpy array
+           sampled signal
         """
         self.fs = fs
         self.s = s
 
-        # 1. Calcul du spectrogramme
+        # Calcul du spectrogramme
         self.f, self.t, self.S = spectrogram(self.s, self.fs, 
                                              nperseg=self.nperseg, 
                                              noverlap=self.noverlap)
 
-        # 2. Extraction de la constellation (maxima locaux)
-        # peak_local_max travaille sur des indices de matrice
+        #Calcul de la constellation (maxima locaux)
         coordinates = peak_local_max(self.S, 
                                      min_distance=self.min_distance, 
                                      exclude_border=False)
         
         # Conversion des indices en unités physiques (temps, fréquence)
-        # coordinates[:, 0] -> axe des fréquences (f), coordinates[:, 1] -> axe du temps (t)
         self.anchors = np.zeros(coordinates.shape)
         self.anchors[:, 0] = self.t[coordinates[:, 1]] # Temps
         self.anchors[:, 1] = self.f[coordinates[:, 0]] # Fréquence
 
-        # 3. Création des codes de hachage
+        #Création des codes de hachage
         self.hashes = []
         num_peaks = len(self.anchors)
         
@@ -75,10 +95,10 @@ class Encoding:
             for j in range(num_peaks):
                 t_i, f_i = self.anchors[j]
                 
-                # Critères cible : 0 < ti - ta <= Delta_t ET |fa - fi| < Delta_f
                 diff_t = t_i - t_a
                 diff_f = abs(f_a - f_i)
                 
+                # on respecte bien les critères donnés dans l'énoncé
                 if 0 < diff_t <= self.delta_t and diff_f < self.delta_f:
                     self.hashes.append({
                         "t": t_a,
@@ -86,8 +106,17 @@ class Encoding:
                     })
 
     def display_spectrogram(self, display_anchors=True):
+        """
+        Display the spectrogram of the audio signal
+
+        Parameters
+        ----------
+        display_anchors: boolean
+           when set equal to True, the anchors are displayed on the
+           spectrogram
+        """
         plt.figure(figsize=(10, 6))
-        # Utilisation de log10 pour mieux voir les pics d'énergie
+        # On utilise le log10 pour mieux voir les pics d'énergie
         plt.pcolormesh(self.t, self.f/1e3, 10 * np.log10(self.S + 1e-10), shading='gouraud')
         plt.xlabel('Temps [s]')
         plt.ylabel('Fréquence [kHz]')
@@ -151,10 +180,9 @@ class Matching:
            the frequency of the target
           
         """
-        self.hashes1 = hashes1 # Extrait
+        self.hashes1 = hashes1 # Extrait à identifier
         self.hashes2 = hashes2 # Base de données
 
-        # Préparation pour la comparaison rapide
         times1 = np.array([item['t'] for item in self.hashes1])
         hashcodes1 = np.array([item['hash'] for item in self.hashes1])
         
@@ -164,17 +192,15 @@ class Matching:
         self.matching = []
         # Pour chaque hash de l'extrait, on cherche s'il existe dans le morceau
         for i, h1 in enumerate(hashcodes1):
-            # On cherche les indices où les vecteurs (dt, fa, fi) sont identiques
             dist = np.sum(np.abs(hashcodes2 - h1), axis=1)
             mask = (dist < 1e-6)
             if mask.any():
-                # On stocke le couple (ta_extrait, ta_morceau)
                 for t2 in times2[mask]:
                     self.matching.append(np.array([times1[i], t2]))
         
         self.matching = np.array(self.matching)
         
-        # 1. Calcul des offsets (ta_morceau - ta_extrait)
+        # On calcule les offsets (ta_morceau - ta_extrait)
         if len(self.matching) > 0:
             self.offsets = self.matching[:, 1] - self.matching[:, 0]
         else:
@@ -182,7 +208,7 @@ class Matching:
 
     def get_score(self):
         """
-        Critère de décision : le pic maximal de l'histogramme des offsets.
+        On choisit pour critère de décision : le pic maximal de l'histogramme des offsets.
         """
         if len(self.offsets) == 0:
             return 0
