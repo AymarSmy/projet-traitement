@@ -70,11 +70,17 @@ if __name__ == '__main__':
     print(f"SCORE : {scores[best_idx]}")
     print("="*30)
 
-    # Affichage de l'histogramme pour le gagnant
+    #Affichage du nuage de points pour le gagnant (question 6)
     best_matcher = Matching(hashes, database[best_idx]['hashcodes'])
+    best_matcher.display_scatterplot()
+
+    #Affichage du nuage de points pour une autre chanson (question 6)
+    no_matcher = Matching(hashes, database[(best_idx + 1) % len(database)]['hashcodes'])
+    no_matcher.display_scatterplot()
+
+    # Affichage de l'histogramme pour le gagnant (question 6)
     best_matcher.display_histogram()
 
-    #Affichage histogramme pour une autre chanson
-    no_matcher = Matching(hashes, database[(best_idx + 1) % len(database)]['hashcodes'])
+    #Affichage histogramme pour une autre chanson (question 6)
     no_matcher.display_histogram()
 
