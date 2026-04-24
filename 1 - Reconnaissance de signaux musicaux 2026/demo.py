@@ -1,9 +1,14 @@
 import os
 import pickle
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io.wavfile import read
 from algorithm import Encoding, Matching
+
+# ----------------------------------------------
+# Run the script
+# ----------------------------------------------
 
 if __name__ == '__main__':
 
@@ -11,36 +16,39 @@ if __name__ == '__main__':
     with open('songs.pickle', 'rb') as handle:
         database = pickle.load(handle)
 
-    # 2: Configuration de l'encodeur (Paramètres identiques à database.py)
-    encoder = Encoding(nperseg=128, noverlap=32, min_distance=25, 
-                       time_window=1.0, freq_window=1500)
-      
-    # 3: Lecture du fichier secret
-    filename = 'secret_sample.wav'
-    print(f"Analyse de : {filename}")
+    # 2: Encoder
+    nperseg=128
+    noverlap=32
+    min_distance=25
+    time_window=1.
+    freq_window=1500
+    encoder = Encoding(nperseg=nperseg, noverlap=noverlap, 
+      min_distance=min_distance,
+      time_window=time_window, 
+      freq_window=freq_window)
     
-    fs, s = read(filename)
-    
-    # Gérer la stéréo si nécessaire
-    if len(s.shape) > 1:
-        s = s[:, 0]
-    
-    # Normalisation du signal (optionnel mais recommandé)
-    s = s.astype(float)
+    # 3: Randomly get an extract from one of the songs of the database
+    songs = [item for item in os.listdir('./samples') if item[:-4] != '.wav']
+    song = random.choice(songs)
+    print('Selected song: ' + song[:-4])
+    filename = './samples/' + song
 
-    # 4: Extraction de la signature
-    # On traite TOUT le fichier secret, pas juste un petit morceau
-    encoder.process(fs, s)
-    hashes_extrait = encoder.hashes
-    print(f"Nombre de hashs extraits : {len(hashes_extrait)}")
+    fs, s = read(filename)
+    tstart = np.random.randint(20, 90)
+    tmin = int(tstart*fs)
+    duration = int(10*fs)
+
+    # 4: Use the encoder to extract a signature from the extract
+    encoder.process(fs, s[tmin:tmin + duration])
+    hashes = encoder.hashes
 
     # 5: Comparaison avec la base de données
     scores = []
     names = []
 
-    print("Comparaison en cours...")
+
     for entry in database:
-        matcher = Matching(hashes_extrait, entry['hashcodes'])
+        matcher = Matching(hashes, entry['hashcodes'])
         score = matcher.get_score()
         scores.append(score)
         names.append(entry['song'])
@@ -53,5 +61,5 @@ if __name__ == '__main__':
     print("="*30)
 
     # Affichage de l'histogramme pour le gagnant
-    best_matcher = Matching(hashes_extrait, database[best_idx]['hashcodes'])
+    best_matcher = Matching(hashes, database[best_idx]['hashcodes'])
     best_matcher.display_histogram()

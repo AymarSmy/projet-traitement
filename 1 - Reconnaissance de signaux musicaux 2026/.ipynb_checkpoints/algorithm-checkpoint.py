@@ -208,5 +208,3 @@ class Matching:
             plt.ylabel('Nombre de correspondances')
             plt.title('Histogramme des décalages temporels')
             plt.show()
-
-

@@ -21,7 +21,7 @@ from algorithm import Encoding
 # ----------------------------------------------
 if __name__ == '__main__':
 
-    folder = './samples/'
+    folder = '../samples/'
 
     # 1: Load the audio files
     import os
@@ -53,6 +53,4 @@ if __name__ == '__main__':
     # 4: Save the database
     with open('songs.pickle', 'wb') as handle:
         pickle.dump(database, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-
 
